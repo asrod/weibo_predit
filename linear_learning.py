@@ -13,9 +13,10 @@ def predictDataPre():
         line=reader.readline()
         if not line:
             break
-        params=line.split('\t')
+        params=line.split('\n')
         words.append(params[0])
     # words=['红包','有','？','分享','就','块','一个','不','吧']
+    print(words)
     j=0
     lines=predictData.readlines()
     for line in lines:
@@ -52,7 +53,7 @@ def dataPre():
         line=reader.readline()
         if not line:
             break
-        params=line.split('\t')
+        params=line.split('\n')
         words.append(params[0])
     # words=['红包','有','？','分享','就','块','一个','不','吧']
     print(words)
@@ -101,11 +102,16 @@ def learn(train_num,test_num,word_num):
         if "\n" in params:
             params.remove("\n")
         row=[]
+        j=0
         for p in params:
+            if j>=word_num and j<=len(params)-7:
+                j=j+1
+                continue
             row.append(num(p))
+            j=j+1
         data.append(row)
-        # if(i%10000==0):
-        #     print(i)
+        if(i%10000==0):
+            print(i)
         if i>train_num+test_num:
             break
         i=i+1
@@ -113,25 +119,16 @@ def learn(train_num,test_num,word_num):
 
     data=np.array(data)
 
-    row_num=[]
-    for i in range(word_num):
-        row_num.append(i)
-
-    #添加平均数进去
-    row_num.append(len(data[0])-6)
-    row_num.append(len(data[0])-5)
-    row_num.append(len(data[0])-4)
-
-    training_set_X=data[0:train_num,row_num]
+    training_set_X=data[0:train_num,0:-3]
     training_set_Y=data[0:train_num,-3:]
-    test_set_X=data[-test_num:,row_num]
+    test_set_X=data[-test_num:,0:-3]
     test_set_Y=data[-test_num:,-3:]
     # print(training_set_X)
     # print(training_set_Y)
     # print(test_set_X)
     # print(test_set_Y)
     print("=====================Average Data============================")
-    predict=data[-test_num:,-7:-4]
+    predict=data[-test_num:,-6:-3]
     predict=np.around(predict).astype(int)
     # print(predict)
     print("Mean squared error: %.2f"
@@ -192,7 +189,7 @@ def learn(train_num,test_num,word_num):
     output.append(count_precision(predict,test_set_Y))
 
     print("=====================Random Forest============================")
-    regr5 = RandomForestRegressor()
+    regr5 = RandomForestRegressor(max_depth=14,n_jobs=-1,min_samples_split=3)
     regr5.fit(training_set_X, training_set_Y)
     predict=regr5.predict(test_set_X)
     predict[predict<0]=0
@@ -204,9 +201,8 @@ def learn(train_num,test_num,word_num):
     output.append(count_precision(predict,test_set_Y))
 
 
-
     print("=====================KNN============================")
-    regr6 = RandomForestRegressor()
+    regr6 = neighbors.KNeighborsRegressor(n_jobs=-1)
     regr6.fit(training_set_X, training_set_Y)
     predict=regr6.predict(test_set_X)
     predict[predict<0]=0
@@ -216,10 +212,11 @@ def learn(train_num,test_num,word_num):
     # Explained variance score: 1 is perfect prediction
     print('Variance score: %.2f' % regr6.score(test_set_X, test_set_Y))
     output.append(count_precision(predict,test_set_Y))
-    writePredict(regr5,word_num)
+    writePredict("rf",regr5,word_num)
+    writePredict("knn",regr6,word_num)
     # output_writer=open("data/output.txt","a+")
     # output_writer.write(str(output)+"\n")
-def writePredict(reg,word_num):
+def writePredict(name,reg,word_num):
     data=[]
     predictData= open("data/training_data_predict_1.txt",'r',encoding='utf-8')
     while 1:
@@ -245,7 +242,10 @@ def writePredict(reg,word_num):
     predict=np.around(predict).astype(int)
 
     reader = open('data/weibo_predict_data.txt', 'r', encoding='utf-8')
-    writer = open('data/predict_linear_6.txt', 'w', encoding='utf-8')
+    if name=="rf":
+        writer = open('data/predict_linear_rf.txt', 'w', encoding='utf-8')
+    else:
+        writer = open('data/predict_linear_knn.txt', 'w', encoding='utf-8')
     line = reader.readline()
     j=0
     while 1:
@@ -312,4 +312,4 @@ if __name__=="__main__":
     #     print("i="+str(i))
     #     print("==========================================")
     #     learn(90000,10000,i)
-    learn(10000,1000,20)
+    learn(10000,1000,10)
