@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn import linear_model
 from sklearn.ensemble import RandomForestRegressor
 import threading
+import matplotlib.pyplot as plt
 
 def predictDataPre(): #测试集中每条微博内容包含多少关键词
     avg_data = pd.read_table('data/weibo_train_data.txt', sep='\t', header=None, names=['user', 'blog', 'time', 'forward', 'comment', 'like', 'content'], encoding='utf-8').groupby('user').mean()
@@ -112,13 +113,13 @@ def learn(data_num,train_num):
 
     data=np.array(data)  #转化成矩阵
 
-    threads = []
-    for q in range(1,100):
+    precision_list = []
+    for q in range(1,101):
     # t1 = threading.Thread(target=randomFroest,args=(10,data,train_num))
     # threads.append(t1)
     # t2 = threading.Thread(target=randomFroest,args=(None,data,train_num))
     # threads.append(t2)
-        randomFroest(q,data,train_num)
+        precision_list.append(randomFroest(q,data,train_num))
     #     t=threading.Thread(target=randomFroest,args=(q,data,train_num))
     #     threads.append(t)
     # for t in threads:
@@ -126,7 +127,13 @@ def learn(data_num,train_num):
     #     t.start()
     #t.join()
     #writePredict(regr5)
-    randomFroest(None,data,train_num)
+    print(precision_list)
+    x=np.linspace(1,100,100)
+    y=precision_list
+    plt.figure(1)
+    plt.plot(x,y)
+    plt.show()
+
 def randomFroest(depth,data,train_num):
     training_set_X=data[0:train_num,0:-3]
     training_set_Y=data[0:train_num,-3:]
@@ -137,12 +144,14 @@ def randomFroest(depth,data,train_num):
     predict=regr5.predict(test_set_X)   #用随机森林进行预测
     predict[predict<0]=0
     predict=np.around(predict).astype(int)
-    print("=====================Random Forest============================")
-    print("depth:"+str(depth))
-    print("Mean squared error: %.2f"
-          % np.mean((predict - test_set_Y) ** 2))
-    print('Variance score: %.2f' % regr5.score(test_set_X, test_set_Y))
-    print(count_precision(predict,test_set_Y))
+    # print("=====================Random Forest============================")
+    # print("depth:"+str(depth))
+    # print("Mean squared error: %.2f"
+    #       % np.mean((predict - test_set_Y) ** 2))
+    # print('Variance score: %.2f' % regr5.score(test_set_X, test_set_Y))
+    precision=count_precision(predict,test_set_Y)
+    # print("precision:"+str(precision)+"%")
+    return precision
 
 def writePredict(reg):
     data=[]
@@ -222,9 +231,9 @@ def count_precision(predict_data,real_data):
         fenzi+=count_cur*sgn
         fenmu+=count_cur
 
-    return "precision:"+str(fenzi/fenmu*100)+"%"
+    return fenzi/fenmu*100
 
 if __name__=="__main__":
-    dataPre()
-    predictDataPre()
+    # dataPre()
+    # predictDataPre()
     learn(10000,1000)
