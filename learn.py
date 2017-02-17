@@ -139,18 +139,18 @@ def randomFroest(depth,data,train_num):
     training_set_Y=data[0:train_num,-3:]
     test_set_X=data[train_num:,0:-3]
     test_set_Y=data[train_num:,-3:]
-    regr5 = RandomForestRegressor(n_estimators =depth)
+    regr5 = RandomForestRegressor(max_depth  =depth)
     regr5.fit(training_set_X, training_set_Y)
     predict=regr5.predict(test_set_X)   #用随机森林进行预测
     predict[predict<0]=0
     predict=np.around(predict).astype(int)
-    # print("=====================Random Forest============================")
-    # print("depth:"+str(depth))
-    # print("Mean squared error: %.2f"
-    #       % np.mean((predict - test_set_Y) ** 2))
-    # print('Variance score: %.2f' % regr5.score(test_set_X, test_set_Y))
+    print("=====================Random Forest============================")
+    print("depth:"+str(depth))
+    print("Mean squared error: %.2f"
+          % np.mean((predict - test_set_Y) ** 2))
+    print('Variance score: %.2f' % regr5.score(test_set_X, test_set_Y))
     precision=count_precision(predict,test_set_Y)
-    # print("precision:"+str(precision)+"%")
+    print("precision:"+str(precision)+"%")
     return precision
 
 def writePredict(reg):
@@ -236,4 +236,4 @@ def count_precision(predict_data,real_data):
 if __name__=="__main__":
     # dataPre()
     # predictDataPre()
-    learn(10000,1000)
+    learn(100000,10000)

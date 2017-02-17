@@ -3,10 +3,13 @@ import pandas as pd
 from sklearn import linear_model,neighbors
 from sklearn.ensemble import RandomForestRegressor
 
+#准备测试集的数据
 def predictDataPre():
+    #根据用户进行分组的平均数
     avg_data = pd.read_table('data/weibo_train_data.txt', sep='\t', header=None, names=['user', 'blog', 'time', 'forward', 'comment', 'like', 'content'], encoding='utf-8').groupby('user').mean()
     predictData=open('data/weibo_predict_data.txt',encoding='utf-8')
     writer = open('data/training_data_predict_1.txt', 'w+', encoding='utf-8')
+    #根据词频选出的词汇
     reader=open('data/word_count_test.txt','r',encoding='gbk')
     words=[]
     while 1:
@@ -18,7 +21,8 @@ def predictDataPre():
     # words=['红包','有','？','分享','就','块','一个','不','吧']
     print(words)
     j=0
-    lines=predictData.readlines()
+    lines=predictData.readlines()、
+    #逐行读取并且构建数据集
     for line in lines:
         params = line.split('\t')
         user = params[0]
@@ -43,7 +47,7 @@ def predictDataPre():
         if j%10000==0:
             print(str(j/len(lines)*100)+"%")
     print(j)
-
+#准备训练集
 def dataPre():
     predictData = pd.read_table('data/weibo_train_data.txt', sep='\t', header=None, names=['user', 'blog', 'time', 'forward', 'comment', 'like', 'content'], encoding='utf-8')
     writer = open('data/training_data_test_1.txt', 'w+', encoding='utf-8')
@@ -79,6 +83,7 @@ def dataPre():
         writer.write(writeString+"\n")
         writer.flush()
         j=j+1
+        #显示目前程序执行的百分比
         if j%10000==0:
             print(str(j/len(predictData)*100)+"%")
 
@@ -88,12 +93,14 @@ def num(s):
     except ValueError:
         return float(s)
 
+#机器学习的步骤
 def learn(train_num,test_num,word_num):
     output=[]
     output.append(word_num)
     data=[]
     trainData= open("data/training_data_test_1.txt",'r',encoding='utf-8')
     i=0
+    #读取训练集放入data中
     while 1:
         line = trainData.readline()
         if not line:
@@ -119,6 +126,7 @@ def learn(train_num,test_num,word_num):
 
     data=np.array(data)
 
+    #将数据集划分为训练集和测试集
     training_set_X=data[0:train_num,0:-3]
     training_set_Y=data[0:train_num,-3:]
     test_set_X=data[-test_num:,0:-3]
@@ -127,6 +135,7 @@ def learn(train_num,test_num,word_num):
     # print(training_set_Y)
     # print(test_set_X)
     # print(test_set_Y)
+    #均值模型
     print("=====================Average Data============================")
     predict=data[-test_num:,-6:-3]
     predict=np.around(predict).astype(int)
@@ -135,7 +144,7 @@ def learn(train_num,test_num,word_num):
           % np.mean((predict - test_set_Y) ** 2))
     output.append(count_precision(predict,test_set_Y))
     # Explained variance score: 1 is perfect prediction
-    # print('Variance score: %.2f' % regr.score(test_set_X, test_set_Y))
+    print('Variance score: %.2f' % regr.score(test_set_X, test_set_Y))
 
     print("=====================Ordinary Least Squares============================")
     regr = linear_model.LinearRegression()
@@ -198,7 +207,7 @@ def learn(train_num,test_num,word_num):
           % np.mean((predict - test_set_Y) ** 2))
     # Explained variance score: 1 is perfect prediction
     print('Variance score: %.2f' % regr5.score(test_set_X, test_set_Y))
-    output.append(count_precision(predict,test_set_Y))
+    # output.append(count_precision(predict,test_set_Y))
 
 
     print("=====================KNN============================")
@@ -216,6 +225,8 @@ def learn(train_num,test_num,word_num):
     writePredict("knn",regr6,word_num)
     # output_writer=open("data/output.txt","a+")
     # output_writer.write(str(output)+"\n")
+
+#将训练结果写入文件中
 def writePredict(name,reg,word_num):
     data=[]
     predictData= open("data/training_data_predict_1.txt",'r',encoding='utf-8')
@@ -274,6 +285,8 @@ def writePredict(name,reg,word_num):
     writer.close()
 
     print(j)
+
+#根据天池网站给的公式计算误差率
 def count_precision(predict_data,real_data):
     fenzi = 0
     fenmu = 0
@@ -312,4 +325,4 @@ if __name__=="__main__":
     #     print("i="+str(i))
     #     print("==========================================")
     #     learn(90000,10000,i)
-    learn(10000,1000,10)
+    learn(1210000,10000,300)
